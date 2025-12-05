@@ -13,6 +13,7 @@ class ConversationUser extends Pivot
         'conversation_id',
         'user_id',
         'joined_at',
+        'left_at',
         'is_muted',
         'last_read_message_id',
         'role',
@@ -22,6 +23,7 @@ class ConversationUser extends Pivot
     {
         return [
             'joined_at' => 'datetime',
+            'left_at' => 'datetime',
             'is_muted' => 'boolean',
         ];
     }

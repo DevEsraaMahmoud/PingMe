@@ -47,12 +47,23 @@ class MessageSent implements ShouldBroadcastNow
      */
     public function broadcastWith(): array
     {
+        // Load attachments if not already loaded
+        if (!$this->message->relationLoaded('attachments')) {
+            $this->message->load('attachments');
+        }
+
         return [
             'message' => [
                 'id' => $this->message->id,
                 'body' => $this->message->body,
                 'type' => $this->message->type,
                 'metadata' => $this->message->metadata,
+                'attachments' => $this->message->attachments->map(fn ($att) => [
+                    'id' => $att->id,
+                    'url' => asset('storage/' . $att->path),
+                    'mime_type' => $att->mime_type,
+                    'size' => $att->size,
+                ]),
                 'user' => [
                     'id' => $this->message->user->id,
                     'name' => $this->message->user->name,

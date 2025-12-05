@@ -27,14 +27,22 @@ Route::get('/', function () {
 // Protected Routes
 Route::middleware('auth')->group(function () {
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
-    Route::post('/conversations', [ConversationController::class, 'store'])->name('conversations.store');
     Route::get('/conversations/{conversation}', [ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/conversations/{conversation}/participants', [ConversationController::class, 'addParticipants'])->name('conversations.add-participants');
+    Route::delete('/conversations/{conversation}/participants/{participant}', [ConversationController::class, 'removeParticipant'])->name('conversations.remove-participant');
     Route::post('/conversations/{conversation}/messages', [MessageController::class, 'store'])->name('messages.store');
     
     // Notification routes
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+    
+    // User activity route
+    Route::post('/api/user/activity', function () {
+        Auth::user()->last_active_at = now();
+        Auth::user()->save();
+        return response()->json(['success' => true]);
+    })->name('user.activity');
     
     // Test broadcast route (for debugging)
     Route::get('/test-broadcast/{conversation}', function (\App\Models\Conversation $conversation) {

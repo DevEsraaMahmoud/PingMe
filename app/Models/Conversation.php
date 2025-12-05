@@ -39,9 +39,17 @@ class Conversation extends Model
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'conversation_user')
-            ->withPivot(['joined_at', 'is_muted', 'last_read_message_id', 'role'])
+            ->withPivot(['joined_at', 'left_at', 'is_muted', 'last_read_message_id', 'role'])
             ->withTimestamps()
             ->using(ConversationUser::class);
+    }
+    
+    /**
+     * Get active participants (not left).
+     */
+    public function activeUsers(): BelongsToMany
+    {
+        return $this->users()->wherePivotNull('left_at');
     }
 
     /**

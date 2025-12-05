@@ -23,6 +23,16 @@
 </head>
 <body class="font-sans antialiased">
     @inertia
+    <script>
+        // Initialize dark mode before Vue app loads
+        (function() {
+            const saved = localStorage.getItem('darkMode');
+            const isDark = saved === 'true' || (saved === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 </body>
 </html>
 

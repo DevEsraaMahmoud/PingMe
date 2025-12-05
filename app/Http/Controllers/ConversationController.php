@@ -14,13 +14,23 @@ class ConversationController extends Controller
      */
     public function index(): Response
     {
-        $conversations = auth()->user()
+        $user = auth()->user();
+        $conversations = $user
             ->conversations()
             ->with(['latestMessage.user', 'users'])
             ->withCount('messages')
             ->orderByDesc('updated_at')
             ->get()
-            ->map(function ($conversation) {
+            ->map(function ($conversation) use ($user) {
+                $pivot = $conversation->pivot;
+                $lastReadMessageId = $pivot->last_read_message_id ?? 0;
+                
+                // Count unread messages
+                $unreadCount = $conversation->messages()
+                    ->where('id', '>', $lastReadMessageId)
+                    ->where('user_id', '!=', $user->id)
+                    ->count();
+                
                 return [
                     'id' => $conversation->id,
                     'title' => $conversation->title,
@@ -32,14 +42,16 @@ class ConversationController extends Controller
                             'id' => $conversation->latestMessage->user->id,
                             'name' => $conversation->latestMessage->user->name,
                         ],
-                        'created_at' => $conversation->latestMessage->created_at,
+                        'created_at' => $conversation->latestMessage->created_at->toIso8601String(),
                     ] : null,
-                    'participants' => $conversation->users->map(fn ($user) => [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                        'email' => $user->email,
+                    'participants' => $conversation->users->map(fn ($u) => [
+                        'id' => $u->id,
+                        'name' => $u->name,
+                        'email' => $u->email,
+                        'last_active_at' => $u->last_active_at?->toIso8601String(),
                     ]),
                     'messages_count' => $conversation->messages_count,
+                    'unread_count' => $unreadCount,
                     'updated_at' => $conversation->updated_at,
                 ];
             });
@@ -63,7 +75,7 @@ class ConversationController extends Controller
                 'created_at' => $notification->created_at->toIso8601String(),
             ]);
 
-        return Inertia::render('ChatPage', [
+        return Inertia::render('Dashboard', [
             'conversations' => $conversations,
             'currentUserId' => auth()->id(),
             'availableUsers' => $allUsers,
@@ -115,10 +127,18 @@ class ConversationController extends Controller
         ]);
 
         // Attach users to conversation
-        $conversation->users()->attach($userIds);
+        // For original participants (creator + initial users), set joined_at to conversation created_at
+        // This way they see all messages from the start
+        $conversationCreatedAt = $conversation->created_at;
+        $conversation->users()->attach(
+            collect($userIds)->mapWithKeys(fn ($id) => [
+                $id => ['joined_at' => $conversationCreatedAt]
+            ])->toArray()
+        );
 
         return redirect()->route('conversations.show', $conversation);
     }
+
 
     /**
      * Display the specified conversation.
@@ -156,14 +176,23 @@ class ConversationController extends Controller
                         'id' => $u->id,
                         'name' => $u->name,
                         'email' => $u->email,
+                        'last_active_at' => $u->last_active_at?->toIso8601String(),
                     ]),
                     'messages_count' => $conv->messages_count,
                     'updated_at' => $conv->updated_at,
                 ];
             });
 
+        // Get user's participation info
+        $userPivot = $conversation->users()->where('users.id', $user->id)->first();
+        if (!$userPivot) {
+            abort(403, 'You are not a participant in this conversation.');
+        }
+        
+        // Get all messages for the conversation
+        // No filtering - all participants see all messages
         $messages = $conversation->messages()
-            ->with('user:id,name,email')
+            ->with(['user:id,name,email', 'attachments'])
             ->orderBy('created_at', 'asc')
             ->get()
             ->map(fn ($message) => [
@@ -171,6 +200,12 @@ class ConversationController extends Controller
                 'body' => $message->body,
                 'type' => $message->type,
                 'metadata' => $message->metadata,
+                'attachments' => $message->attachments->map(fn ($att) => [
+                    'id' => $att->id,
+                    'url' => asset('storage/' . $att->path),
+                    'mime_type' => $att->mime_type,
+                    'size' => $att->size,
+                ]),
                 'user' => [
                     'id' => $message->user->id,
                     'name' => $message->user->name,
@@ -184,6 +219,7 @@ class ConversationController extends Controller
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
+            'last_active_at' => $u->last_active_at?->toIso8601String(),
         ]);
 
         // Get all users for creating new conversations
@@ -205,7 +241,7 @@ class ConversationController extends Controller
                 'created_at' => $notification->created_at->toIso8601String(),
             ]);
 
-        return Inertia::render('ChatPage', [
+        return Inertia::render('Dashboard', [
             'conversations' => $conversations,
             'conversation' => [
                 'id' => $conversation->id,

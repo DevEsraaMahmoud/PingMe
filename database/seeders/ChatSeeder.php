@@ -95,3 +95,5 @@ class ChatSeeder extends Seeder
     }
 }
 
+
+

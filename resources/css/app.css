@@ -10,6 +10,9 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Dark mode configuration - Tailwind v4 uses class strategy by default */
+/* The 'dark' class on html element will enable dark mode */
+
 @keyframes bounce {
     0%, 100% {
         transform: translateY(0);

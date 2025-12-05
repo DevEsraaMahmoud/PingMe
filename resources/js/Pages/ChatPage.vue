@@ -51,7 +51,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
-import axios from 'axios';
 import ChatList from '../Components/ChatList.vue';
 import ChatWindow from '../Components/ChatWindow.vue';
 import NotificationDropdown from '../Components/NotificationDropdown.vue';
@@ -106,15 +105,6 @@ watch(
     () => props.messages,
     (newMessages) => {
         localMessages.value = [...newMessages];
-    },
-    { deep: true }
-);
-
-// Update local notifications when props.notifications changes
-watch(
-    () => props.notifications,
-    (newNotifications) => {
-        localNotifications.value = [...newNotifications];
     },
     { deep: true }
 );

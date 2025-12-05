@@ -1,18 +1,21 @@
-# Real-Time Chat Application
+# PingMe - Real-Time Chat Dashboard
 
-A minimal but complete real-time chat application built with Laravel 12, Vue 3, Inertia.js, and Laravel Broadcasting.
+A professional and elegant real-time chat application built with Laravel 12, Vue 3, Inertia.js, and Laravel Reverb.
 
 ## Features
 
-- Real-time messaging using Laravel Broadcasting
-- Support for Laravel Reverb (default) and soketi/Pusher protocol
-- Vue 3 + Inertia.js for seamless SPA experience
-- Conversation management (1-on-1 and group chats)
-- Message history and participants display
-- Typing indicators (whisper events)
-- Optimistic UI updates
-- Real-time notifications with sound
-- Queueable notification system
+- **Real-time messaging** using Laravel Broadcasting with Reverb
+- **Professional Dashboard** with three-column layout (Conversations, Chat, Participants)
+- **Presence channels** for online/away status
+- **Typing indicators** using whisper events
+- **Image attachments** with preview and full-size modal view
+- **Sound notifications** (ping sound) for incoming messages (recipients only)
+- **Browser notifications** with permission handling
+- **Unread message badges** in conversation list
+- **Search conversations** functionality
+- **Queueable notifications** system
+- **Optimistic UI** updates
+- **Responsive design** with TailwindCSS
 
 ## Tech Stack
 
@@ -83,19 +86,23 @@ php artisan install:broadcasting
 Configure `.env`:
 
 ```env
-BROADCAST_DRIVER=reverb
+BROADCAST_CONNECTION=reverb
 
-REVERB_APP_ID=my-app-id
-REVERB_APP_KEY=my-app-key
-REVERB_APP_SECRET=my-app-secret
-REVERB_HOST=localhost
+# Reverb Configuration
+REVERB_APP_ID=local-app-id
+REVERB_APP_KEY=local-app-key
+REVERB_APP_SECRET=local-app-secret
+REVERB_SERVER_HOST=0.0.0.0
+REVERB_SERVER_PORT=8080
+REVERB_HOST=127.0.0.1
 REVERB_PORT=8080
 REVERB_SCHEME=http
 
-VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
-VITE_REVERB_HOST="${REVERB_HOST}"
-VITE_REVERB_PORT="${REVERB_PORT}"
-VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+# Vite Configuration (mapped to Reverb)
+VITE_PUSHER_APP_KEY="${REVERB_APP_KEY}"
+VITE_PUSHER_HOST="${REVERB_HOST}"
+VITE_PUSHER_PORT="${REVERB_PORT}"
+VITE_PUSHER_SCHEME="${REVERB_SCHEME}"
 ```
 
 #### Option B: Soketi (Pusher Protocol Compatible)

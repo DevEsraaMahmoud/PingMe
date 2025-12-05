@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'last_active_at',
     ];
 
     /**
@@ -43,6 +44,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_active_at' => 'datetime',
         ];
     }
 
@@ -52,7 +54,7 @@ class User extends Authenticatable
     public function conversations()
     {
         return $this->belongsToMany(Conversation::class, 'conversation_user')
-            ->withPivot(['joined_at', 'is_muted', 'last_read_message_id', 'role'])
+            ->withPivot(['joined_at', 'left_at', 'is_muted', 'last_read_message_id', 'role'])
             ->withTimestamps()
             ->using(ConversationUser::class);
     }

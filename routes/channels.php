@@ -23,3 +23,16 @@ Broadcast::channel('user.{userId}', function ($user, $userId) {
     return (int) $user->id === (int) $userId;
 });
 
+// Presence channel for online status
+Broadcast::channel('presence-conversation.{conversationId}', function ($user, $conversationId) {
+    // Check if user is a participant
+    if ($user->conversations()->where('conversations.id', $conversationId)->exists()) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ];
+    }
+    return false;
+});
+
