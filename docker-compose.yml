@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  soketi:
+    image: quay.io/soketi/soketi:latest
+    container_name: ping-me-soketi
+    ports:
+      - "6001:6001"
+    environment:
+      - SOKETI_DEBUG=1
+      - SOKETI_SSL=false
+      - SOKETI_HTTP_PORT=6001
+      - SOKETI_APP_ID=your-app-id
+      - SOKETI_APP_KEY=your-key
+      - SOKETI_APP_SECRET=your-secret
+    volumes:
+      - ./soketi-config:/etc/soketi
+    restart: unless-stopped
+    networks:
+      - ping-me-network
+
+networks:
+  ping-me-network:
+    driver: bridge
+
