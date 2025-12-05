@@ -5,7 +5,7 @@
                 v-for="(participant, index) in participants.slice(0, 3)"
                 :key="participant.id"
                 :class="[
-                    'w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-semibold text-gray-700 border-2 border-white',
+                    'w-8 h-8 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-xs font-semibold text-black border-2 border-white border-opacity-30',
                     index > 0 ? '-ml-2' : '',
                 ]"
                 :title="participant.name"
@@ -13,7 +13,7 @@
                 {{ getInitials(participant.name) }}
             </div>
         </div>
-        <span v-if="participants.length > 3" class="text-sm text-gray-500">
+        <span v-if="participants.length > 3" class="text-sm text-blue-100">
             +{{ participants.length - 3 }} more
         </span>
     </div>

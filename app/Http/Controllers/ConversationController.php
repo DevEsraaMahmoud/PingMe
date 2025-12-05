@@ -44,10 +44,80 @@ class ConversationController extends Controller
                 ];
             });
 
+        // Get all users for creating new conversations
+        $allUsers = \App\Models\User::where('id', '!=', auth()->id())
+            ->select('id', 'name', 'email')
+            ->get();
+
+        // Get recent notifications
+        $notifications = auth()->user()
+            ->notifications()
+            ->where('type', \App\Notifications\MessageNotification::class)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn ($notification) => [
+                'id' => $notification->id,
+                'data' => $notification->data,
+                'read_at' => $notification->read_at?->toIso8601String(),
+                'created_at' => $notification->created_at->toIso8601String(),
+            ]);
+
         return Inertia::render('ChatPage', [
             'conversations' => $conversations,
             'currentUserId' => auth()->id(),
+            'availableUsers' => $allUsers,
+            'notifications' => $notifications,
         ]);
+    }
+
+    /**
+     * Store a newly created conversation.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => ['exists:users,id'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'is_group' => ['boolean'],
+        ]);
+
+        $user = auth()->user();
+        $userIds = $validated['user_ids'];
+        
+        // Add current user to participants
+        $userIds[] = $user->id;
+        $userIds = array_unique($userIds);
+
+        // Check if a 1-on-1 conversation already exists (if not a group)
+        if (!($validated['is_group'] ?? false) && count($userIds) === 2) {
+            $existingConversation = Conversation::where('is_group', false)
+                ->whereHas('users', function ($query) use ($userIds) {
+                    $query->whereIn('users.id', $userIds);
+                }, '=', count($userIds))
+                ->get()
+                ->filter(function ($conv) use ($userIds) {
+                    return $conv->users->pluck('id')->sort()->values()->toArray() === 
+                           collect($userIds)->sort()->values()->toArray();
+                })
+                ->first();
+
+            if ($existingConversation) {
+                return redirect()->route('conversations.show', $existingConversation);
+            }
+        }
+
+        $conversation = Conversation::create([
+            'title' => $validated['title'] ?? null,
+            'is_group' => $validated['is_group'] ?? (count($userIds) > 2),
+            'created_by' => $user->id,
+        ]);
+
+        // Attach users to conversation
+        $conversation->users()->attach($userIds);
+
+        return redirect()->route('conversations.show', $conversation);
     }
 
     /**
@@ -116,6 +186,25 @@ class ConversationController extends Controller
             'email' => $u->email,
         ]);
 
+        // Get all users for creating new conversations
+        $allUsers = \App\Models\User::where('id', '!=', auth()->id())
+            ->select('id', 'name', 'email')
+            ->get();
+
+        // Get recent notifications
+        $notifications = auth()->user()
+            ->notifications()
+            ->where('type', \App\Notifications\MessageNotification::class)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(fn ($notification) => [
+                'id' => $notification->id,
+                'data' => $notification->data,
+                'read_at' => $notification->read_at?->toIso8601String(),
+                'created_at' => $notification->created_at->toIso8601String(),
+            ]);
+
         return Inertia::render('ChatPage', [
             'conversations' => $conversations,
             'conversation' => [
@@ -126,6 +215,8 @@ class ConversationController extends Controller
             ],
             'messages' => $messages,
             'currentUserId' => auth()->id(),
+            'availableUsers' => $allUsers,
+            'notifications' => $notifications,
         ]);
     }
 }

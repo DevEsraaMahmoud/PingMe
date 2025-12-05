@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageSent;
+use App\Events\NotificationSent;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Notifications\MessageNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -60,22 +62,51 @@ class MessageController extends Controller
         $message->load('user:id,name,email');
 
         // Broadcast the message
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+            \Log::info('Message broadcasted', [
+                'message_id' => $message->id,
+                'conversation_id' => $conversation->id,
+                'user_id' => $user->id,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Failed to broadcast message', [
+                'error' => $e->getMessage(),
+                'message_id' => $message->id,
+            ]);
+        }
+
+        // Send notifications to all participants except the sender
+        $participants = $conversation->users()->where('users.id', '!=', $user->id)->get();
+        foreach ($participants as $participant) {
+            try {
+                // Send notification (queued)
+                $participant->notify(new MessageNotification($message));
+            } catch (\Exception $e) {
+                \Log::error('Failed to send notification', [
+                    'error' => $e->getMessage(),
+                    'user_id' => $participant->id,
+                    'message_id' => $message->id,
+                ]);
+            }
+        }
+
+        $messageData = [
+            'id' => $message->id,
+            'body' => $message->body,
+            'type' => $message->type,
+            'metadata' => $message->metadata,
+            'user' => [
+                'id' => $message->user->id,
+                'name' => $message->user->name,
+                'email' => $message->user->email,
+            ],
+            'created_at' => $message->created_at->toIso8601String(),
+            'edited_at' => $message->edited_at?->toIso8601String(),
+        ];
 
         return response()->json([
-            'message' => [
-                'id' => $message->id,
-                'body' => $message->body,
-                'type' => $message->type,
-                'metadata' => $message->metadata,
-                'user' => [
-                    'id' => $message->user->id,
-                    'name' => $message->user->name,
-                    'email' => $message->user->email,
-                ],
-                'created_at' => $message->created_at,
-                'edited_at' => $message->edited_at,
-            ],
+            'message' => $messageData,
         ], 201);
     }
 }

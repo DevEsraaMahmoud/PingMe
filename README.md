@@ -11,6 +11,8 @@ A minimal but complete real-time chat application built with Laravel 12, Vue 3, 
 - Message history and participants display
 - Typing indicators (whisper events)
 - Optimistic UI updates
+- Real-time notifications with sound
+- Queueable notification system
 
 ## Tech Stack
 
@@ -174,7 +176,21 @@ Or run soketi directly:
 npx @soketi/soketi start
 ```
 
-### 3. Start Vite Dev Server (if using `npm run dev`)
+### 3. Start Queue Worker (for notifications)
+
+Notifications are queueable, so you need to run a queue worker:
+
+```bash
+php artisan queue:work
+```
+
+Or use the database queue driver (default):
+
+```bash
+php artisan queue:work --queue=default
+```
+
+### 4. Start Vite Dev Server (if using `npm run dev`)
 
 ```bash
 npm run dev
@@ -255,10 +271,12 @@ php artisan make:seeder ChatSeeder
    - Check Laravel logs for broadcasting errors
 
 3. **Queue Configuration**:
-   - If using queues, ensure queue worker is running:
+   - Notifications are queueable, ensure queue worker is running:
    ```bash
    php artisan queue:work
    ```
+   - Check `.env` for `QUEUE_CONNECTION=database` (default)
+   - Verify `jobs` table exists (created by default migrations)
 
 ### Frontend Issues
 
@@ -347,23 +365,27 @@ PUSHER_PORT=443
 ```
 app/
 ├── Events/
-│   └── MessageSent.php          # Broadcasting event
+│   ├── MessageSent.php          # Broadcasting event
+│   └── NotificationSent.php     # Notification broadcast event
 ├── Http/
 │   └── Controllers/
 │       ├── ConversationController.php
 │       └── MessageController.php
-└── Models/
-    ├── Conversation.php
-    ├── ConversationUser.php
-    ├── Message.php
-    └── MessageAttachment.php
+├── Models/
+│   ├── Conversation.php
+│   ├── ConversationUser.php
+│   ├── Message.php
+│   └── MessageAttachment.php
+└── Notifications/
+    └── MessageNotification.php  # Queueable notification
 
 database/
 └── migrations/
     ├── xxxx_create_conversations_table.php
     ├── xxxx_create_messages_table.php
     ├── xxxx_create_message_attachments_table.php
-    └── xxxx_create_conversation_user_table.php
+    ├── xxxx_create_conversation_user_table.php
+    └── xxxx_create_notifications_table.php
 
 resources/
 ├── js/
@@ -375,6 +397,8 @@ resources/
 │   │   ├── Composer.vue
 │   │   ├── MessageBubble.vue
 │   │   └── Participants.vue
+│   ├── services/
+│   │   └── notificationService.js  # Notification service with sound
 │   ├── bootstrap/
 │   │   └── echo.js              # Echo configuration
 │   └── app.js

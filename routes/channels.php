@@ -18,3 +18,8 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
     return $user->conversations()->where('conversations.id', $conversationId)->exists();
 });
 
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    // Users can only listen to their own notification channel
+    return (int) $user->id === (int) $userId;
+});
+

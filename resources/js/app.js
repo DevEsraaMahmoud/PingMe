@@ -7,6 +7,11 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 
 // Import Echo for real-time features
 import './bootstrap/echo';
+// Initialize notification service
+import { initNotificationService } from './services/notificationService';
+
+// Initialize notifications on app load
+initNotificationService();
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
