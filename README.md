@@ -4,11 +4,8 @@ A real-time chat application built with Laravel 12, Vue 3, Inertia.js, and Larav
  📸 Demo
 
 <p align="center">
-  <img src="screenshots/2.png" width="300"/>
-</p>
-
-<p align="center">
-  <img src="screenshots/1.png" width="300"/>
+  <img src="screenshots/2.png" width="400"/>
+  <img src="screenshots/1.png" width="400"/>
 </p>
 
 ## Features
