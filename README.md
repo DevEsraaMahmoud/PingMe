@@ -1,56 +1,87 @@
-# PingMe - Real-Time Chat Application
+# PingMe — Real-Time Communication System
 
-A real-time chat application built with Laravel 12, Vue 3, Inertia.js, and Laravel Reverb.
- 📸 Demo
+A real-time chat application built to demonstrate **event-driven architecture**, WebSocket communication, and scalable backend design using Laravel Reverb.
 
-<p align="center">
-  <img src="screenshots/2.png" width="400"/>
-  <img src="screenshots/1.png" width="400"/>
-</p>
+This project focuses on **correctness, system design, and realtime behavior**, not UI polish.
 
-## Features
+---
 
-- Real-time messaging with Laravel Reverb
-- Online/offline presence indicators
+## 🎯 Purpose
+
+The main goals of this project are to:
+
+- Practice real-time communication patterns
+- Design an event-driven backend with WebSockets
+- Handle presence, typing indicators, and async notifications
+- Demonstrate clean separation between realtime, domain logic, and UI
+
+---
+
+## ✨ Key Features
+
+- Real-time messaging using WebSockets (Laravel Reverb)
+- Online / offline presence tracking
 - Typing indicators
 - Image attachments with preview
-- Audio & browser notifications
-- Unread message badges
+- Browser & audio notifications
+- Unread message indicators
 - Dark mode support
-- Responsive design with TailwindCSS
+- Responsive layout using TailwindCSS
 
-## Tech Stack
+---
+
+## 🏗️ Architecture Overview
+
+- Backend-driven architecture using Inertia.js
+- Event-driven messaging (Events → Broadcast → UI)
+- WebSocket layer isolated from domain logic
+- Async processing for notifications using queues
+- Clean separation between:
+  - Conversations
+  - Messages
+  - Presence
+  - Notifications
+
+---
+
+## 🧰 Tech Stack
 
 - **Backend**: Laravel 12 (PHP 8.3+)
 - **Frontend**: Vue 3 + Inertia.js + Vite
-- **Realtime**: Laravel Reverb
+- **Realtime**: Laravel Reverb (WebSockets)
+- **Async**: Laravel Queues
 - **Styling**: TailwindCSS
+- **Database**: MySQL (SQLite supported locally)
 
-## Quick Start
+---
 
-### 1. Install Dependencies
+## 🚀 Getting Started
+
+### Prerequisites
+
+- PHP 8.3+
+- Composer
+- Node.js & npm
+- MySQL
+
+---
+
+### Installation
 
 ```bash
 composer install
 npm install
-```
 
-### 2. Setup Environment
-
-```bash
 cp .env.example .env
 php artisan key:generate
+php artisan migrate
+php artisan storage:link
 ```
 
-Configure your database and Reverb settings in `.env`:
-
-```env
-DB_CONNECTION=mysql
-DB_DATABASE=your_database
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-
+### Realtime Configuration (.env)
+```bash
 BROADCAST_CONNECTION=reverb
+
 REVERB_APP_ID=local-app-id
 REVERB_APP_KEY=local-app-key
 REVERB_APP_SECRET=local-app-secret
@@ -64,69 +95,51 @@ VITE_REVERB_PORT="${REVERB_PORT}"
 VITE_REVERB_SCHEME="${REVERB_SCHEME}"
 ```
 
-### 3. Setup Database
+### ▶️ Running the Application
 
-```bash
-php artisan migrate
-php artisan storage:link
-```
-
-### 4. Install Reverb (if not already installed)
-
-```bash
-composer require laravel/reverb
-php artisan install:broadcasting
-```
-
-## Running the Application
-
-Open **3 terminal windows**:
-
-**Terminal 1** - Laravel server:
+Open three terminals:
+- Laravel server
+  
 ```bash
 php artisan serve
 ```
 
-**Terminal 2** - Reverb WebSocket server:
+- Reverb WebSocket server
 ```bash
 php artisan reverb:start
 ```
-
-**Terminal 3** - Queue worker (for notifications):
+- Queue worker
 ```bash
 php artisan queue:work
 ```
-
-**Terminal 4** (optional) - Vite dev server:
+- Frontend (optional)
 ```bash
 npm run dev
 ```
 
-Visit `http://localhost:8000` and register/login to start chatting!
+- Visit http://localhost:8000
 
-## Testing
+### 📌 Design Decisions & Trade-offs
 
-1. Register/login as User A in Browser 1
-2. Register/login as User B in Browser 2
-3. Create a conversation via tinker:
-   ```bash
-   php artisan tinker
-   ```
-   ```php
-   $user1 = App\Models\User::first();
-   $user2 = App\Models\User::skip(1)->first();
-   $conv = App\Models\Conversation::create(['created_by' => $user1->id]);
-   $conv->users()->attach([$user1->id, $user2->id]);
-   ```
-4. Open `/conversations/{id}` in both browsers and start chatting!
+Chose Laravel Reverb to stay fully backend-driven
 
-## Troubleshooting
+Avoided external realtime services to understand WebSocket internals
 
-- **WebSocket not connecting**: Ensure Reverb is running (`php artisan reverb:start`)
-- **Notifications not working**: Make sure queue worker is running (`php artisan queue:work`)
-- **Images not loading**: Run `php artisan storage:link`
-- **Dark mode not working**: Clear browser cache and rebuild assets (`npm run build`)
+Kept UI minimal to focus on realtime correctness
 
-## License
+Notifications handled asynchronously for scalability
 
-MIT License
+### 🔮 Possible Improvements
+
+Read receipts and delivery status
+
+Message pagination & virtualization
+
+Horizontal scaling for WebSocket servers
+
+Automated tests for realtime flows
+
+### 📄 License
+
+MIT License — for learning and portfolio purposes.
+ذذذ
